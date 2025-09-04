@@ -4,7 +4,7 @@ export const saveDocument = () => {
   try {
     // Check if document is open
     if (!app.documents.length) {
-      throw new Error("No document available to save");
+      return { ok: true, message: "No document open" };
     }
 
     const doc = app.activeDocument;
@@ -21,10 +21,6 @@ export const saveDocument = () => {
     // throw new Error(`Save error: ${errorMessage}`);
     return { ok: false, error: errorMessage };
   }
-};
-
-export const checkDocumentExists = () => {
-  return app.documents.length > 0;
 };
 
 export const getDocumentInfo = () => {
