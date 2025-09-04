@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
 import { format } from "date-fns";
+import { useCallback, useEffect, useState } from "react";
 import { os, path } from "../lib/cep/node";
-import { subscribeBackgroundColor, evalTS } from "../lib/utils/bolt";
+import { evalTS, subscribeBackgroundColor } from "../lib/utils/bolt";
 
 const DEFAULT_AUTO_SAVE_INTERVAL_SECS = 300; // Default 5分 = 300秒
 

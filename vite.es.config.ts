@@ -1,11 +1,10 @@
-import fs from "fs";
-import { rollup, watch, RollupOptions, OutputOptions } from "rollup";
-import nodeResolve from "@rollup/plugin-node-resolve";
 import babel from "@rollup/plugin-babel";
-import { jsxInclude, jsxBin, jsxPonyfill } from "vite-cep-plugin";
-import { CEP_Config } from "vite-cep-plugin";
 import json from "@rollup/plugin-json";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import fs from "fs";
 import path from "path";
+import { OutputOptions, RollupOptions, rollup, watch } from "rollup";
+import { CEP_Config, jsxBin, jsxInclude, jsxPonyfill } from "vite-cep-plugin";
 
 const GLOBAL_THIS = "thisObj";
 

@@ -1,11 +1,9 @@
-import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
-
 import react from "@vitejs/plugin-react";
-
+import path from "path";
+import { defineConfig } from "vite";
 import { cep, runAction } from "vite-cep-plugin";
 import cepConfig from "./cep.config";
-import path from "path";
 import { extendscriptConfig } from "./vite.es.config";
 
 const extensions = [".js", ".ts", ".tsx"];
