@@ -1,0 +1,53 @@
+name: Build ZXP
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: yarn
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build ZXP package
+        run: yarn zxp
+
+      - name: Upload ZXP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zxp-package
+          path: dist/zxp/
+          if-no-files-found: error
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: main-${{ github.run_number }}
+          name: Main Build ${{ github.run_number }}
+          draft: false
+          prerelease: false
+          files: dist/zxp/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
