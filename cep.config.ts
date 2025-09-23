@@ -41,10 +41,11 @@ const config: CEP_Config = {
     sourceMap: true,
   },
   zxp: {
-    country: "US",
+    country: "JP",
     province: "CA",
-    org: "Company",
-    password: "password",
+    org: "Hanakla",
+    password:
+      typeof process !== "undefined" ? process.env.ZXP_PASSWORD! : "changeit",
     tsa: [
       "http://timestamp.digicert.com/", // Windows Only
       "http://timestamp.apple.com/ts01", // MacOS Only
