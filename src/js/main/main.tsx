@@ -20,7 +20,7 @@ type DocumentSettings = {
 
 const defaultSettings: DocumentSettings = {
   enabled: true,
-  disableConfirm: true,
+  disableConfirm: false,
   interval: DEFAULT_AUTO_SAVE_INTERVAL_SECS,
   lastSaveTime: null,
   timeRemaining: DEFAULT_AUTO_SAVE_INTERVAL_SECS,
