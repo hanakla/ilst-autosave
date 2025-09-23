@@ -234,7 +234,8 @@ export const App = () => {
               fontWeight: "bold",
             }}
           >
-            Next save in: {formatTime(currentSettings.timeRemaining)}
+            Next save in: {formatTime(currentSettings.timeRemaining)} (
+            {currentDocName})
             <label
               style={{ display: "flex", alignItems: "center", gap: "4px" }}
             >
