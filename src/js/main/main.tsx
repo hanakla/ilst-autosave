@@ -1,17 +1,29 @@
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 // import { os, path } from "../lib/cep/node";
-import { evalTS, subscribeBackgroundColor } from "../lib/utils/bolt";
+import { evalTS, subscribeBackgroundColor, csi } from "../lib/utils/bolt";
 import { useEventCallback } from "../lib/utils/hooks";
 
 const DEFAULT_AUTO_SAVE_INTERVAL_SECS = 300; // Default 5分 = 300秒
 
-type SaveStatus = { ok: boolean | null; message: string };
+type SaveStatus = {
+  level?: "info" | "success" | "error";
+  message: string;
+};
 type DocumentSettings = {
   enabled: boolean;
+  disableConfirm: boolean;
   interval: number;
   lastSaveTime: Date | null;
   timeRemaining: number;
+};
+
+const defaultSettings: DocumentSettings = {
+  enabled: true,
+  disableConfirm: true,
+  interval: DEFAULT_AUTO_SAVE_INTERVAL_SECS,
+  lastSaveTime: null,
+  timeRemaining: DEFAULT_AUTO_SAVE_INTERVAL_SECS,
 };
 
 export const App = () => {
@@ -21,23 +33,16 @@ export const App = () => {
     Record<string, DocumentSettings>
   >({});
   const [saveStatus, setSaveStatus] = useState<SaveStatus | null>(null);
+  const isInSavingRef = useRef(false);
 
   // Get current document settings or create default
   const getCurrentDocSettings = (): DocumentSettings => {
     if (!currentDocName) {
-      return {
-        enabled: true,
-        interval: DEFAULT_AUTO_SAVE_INTERVAL_SECS,
-        lastSaveTime: null,
-        timeRemaining: DEFAULT_AUTO_SAVE_INTERVAL_SECS,
-      };
+      return { ...defaultSettings };
     }
     return (
       documentSettings[currentDocName] || {
-        enabled: true,
-        interval: DEFAULT_AUTO_SAVE_INTERVAL_SECS,
-        lastSaveTime: null,
-        timeRemaining: DEFAULT_AUTO_SAVE_INTERVAL_SECS,
+        ...defaultSettings,
       }
     );
   };
@@ -75,20 +80,42 @@ export const App = () => {
 
   // Auto-save execution
   const performAutoSave = useEventCallback(async () => {
-    setSaveStatus({ ok: null, message: "Saving..." });
+    setSaveStatus({ level: "info", message: "Saving..." });
 
-    const result = await evalTS("saveDocument");
-
-    const now = new Date();
-
-    if (result.ok) {
-      setSaveStatus({ ok: true, message: "Save completed" });
-      updateDocumentSettings({
-        lastSaveTime: now,
-        timeRemaining: currentSettings.interval,
+    if (isInSavingRef.current === true) {
+      setSaveStatus({
+        level: "info",
+        message: "Save skipped: already in progress",
       });
-    } else {
-      setSaveStatus({ ok: false, message: `Save error: ${result.error}` });
+      return;
+    }
+
+    try {
+      isInSavingRef.current = true;
+      const result = await evalTS("saveDocument", {
+        noConfirm: currentSettings.disableConfirm,
+      });
+
+      const now = new Date();
+
+      if (result.ok) {
+        setSaveStatus({ level: "success", message: "Save completed" });
+        updateDocumentSettings({
+          lastSaveTime: now,
+          timeRemaining: currentSettings.interval,
+        });
+      } else {
+        if (result.userCancelled) {
+          setSaveStatus({ level: "info", message: "Save cancelled by user" });
+        } else {
+          setSaveStatus({
+            level: "error",
+            message: `Save error: ${result.error}`,
+          });
+        }
+      }
+    } finally {
+      isInSavingRef.current = false;
       updateDocumentSettings({ timeRemaining: currentSettings.interval });
     }
 
@@ -114,12 +141,23 @@ export const App = () => {
     });
   });
 
-  // Check document changes
+  // Setup CSInterface event listeners for document changes
   useEffect(() => {
+    if (!window.cep) return;
+
+    // Initial check
     checkCurrentDocument();
-    const docCheckInterval = setInterval(checkCurrentDocument, 1000);
-    return () => clearInterval(docCheckInterval);
-  }, [checkCurrentDocument]);
+
+    // Add event listeners for document-related events
+    csi.addEventListener("documentAfterActivate", checkCurrentDocument);
+    csi.addEventListener("applicationActivate", checkCurrentDocument);
+
+    return () => {
+      // Remove event listeners
+      csi.removeEventListener("documentAfterActivate", checkCurrentDocument);
+      csi.removeEventListener("applicationActivate", checkCurrentDocument);
+    };
+  }, [checkCurrentDocument, currentSettings.enabled]);
 
   // Timer management
   useEffect(() => {
@@ -154,6 +192,19 @@ export const App = () => {
     }
   }, []);
 
+  useEffect(() => {
+    setTimeout(() => setSaveStatus({ level: "info", message: "Ready" }), 1000);
+    setTimeout(
+      () => setSaveStatus({ level: "success", message: "All changes saved" }),
+      2000,
+    );
+    setTimeout(
+      () => setSaveStatus({ level: "error", message: "Error saving document" }),
+      3000,
+    );
+    setTimeout(() => setSaveStatus(null), 6000);
+  }, []);
+
   // Time format (min:sec)
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -181,7 +232,6 @@ export const App = () => {
               display: "flex",
               justifyContent: "space-between",
               fontWeight: "bold",
-              marginBottom: "8px",
             }}
           >
             Next save in: {formatTime(currentSettings.timeRemaining)}
@@ -206,38 +256,75 @@ export const App = () => {
               style={{ width: "100%", height: "20px" }}
             />
 
-            {/* Interval setting */}
-            <label style={{ fontSize: "12px" }}>
-              Interval (sec):
-              <select
-                value={currentSettings.interval}
-                onChange={(e) => handleIntervalChange(Number(e.target.value))}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+              }}
+            >
+              {/* Interval setting */}
+              <label
                 style={{
-                  padding: "2px 4px",
+                  display: "flex",
+                  alignItems: "center",
                   fontSize: "12px",
-                  backgroundColor: bgColor,
-                  color: "#fff",
-                  border: "1px solid #555",
-                  borderRadius: "2px",
                 }}
               >
-                <option value={30}>30s</option>
-                <option value={60}>1m</option>
-                <option value={120}>2m</option>
-                <option value={300}>5m</option>
-                <option value={600}>10m</option>
-                <option value={900}>15m</option>
-                <option value={5}>5s</option>
-              </select>
-            </label>
+                Save Interval:
+                <select
+                  value={currentSettings.interval}
+                  onChange={(e) => handleIntervalChange(Number(e.target.value))}
+                  style={{
+                    marginLeft: "8px",
+                    padding: "2px 4px",
+                    fontSize: "12px",
+                    backgroundColor: bgColor,
+                    color: "#fff",
+                    border: "1px solid #888",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <option value={30}>30s</option>
+                  <option value={60}>1m</option>
+                  <option value={120}>2m</option>
+                  <option value={300}>5m</option>
+                  <option value={600}>10m</option>
+                  <option value={900}>15m</option>
+                  <option value={5}>5s</option>
+                </select>
+              </label>
 
-            {/* Last save time */}
-            {currentSettings.lastSaveTime && (
-              <div style={{ fontSize: "10px", opacity: 0.8, marginTop: "4px" }}>
-                Last saved:{" "}
-                {format(currentSettings.lastSaveTime, "yyyy-MM-dd HH:mm:ss")}
-              </div>
-            )}
+              <div style={{ borderLeft: "1px solid #888" }}>&zwnj;</div>
+
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  fontSize: "12px",
+                }}
+              >
+                Confirm-less:
+                <input
+                  type="checkbox"
+                  style={{ marginLeft: "8px" }}
+                  checked={currentSettings.disableConfirm}
+                  onChange={(e) =>
+                    updateDocumentSettings({ disableConfirm: e.target.checked })
+                  }
+                />
+              </label>
+
+              {/* Last save time */}
+              {currentSettings.lastSaveTime && (
+                <div
+                  style={{ fontSize: "10px", opacity: 0.8, marginTop: "4px" }}
+                >
+                  Last saved:{" "}
+                  {format(currentSettings.lastSaveTime, "yyyy-MM-dd HH:mm:ss")}
+                </div>
+              )}
+            </div>
 
             {/* Status display */}
             {saveStatus && (
@@ -246,9 +333,11 @@ export const App = () => {
                   marginTop: "4px",
                   padding: "4px",
                   backgroundColor:
-                    saveStatus.ok === false
+                    saveStatus.level === "error"
                       ? "rgba(204, 0, 0, 0.5)"
-                      : "#007ACC",
+                      : saveStatus.level === "success"
+                        ? "rgba(0, 204, 102, 0.5)"
+                        : "rgba(0, 122, 204, 0.5)",
                   borderRadius: "4px",
                   fontSize: "12px",
                   lineHeight: "16px",

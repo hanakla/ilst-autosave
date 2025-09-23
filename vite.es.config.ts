@@ -16,7 +16,6 @@ export const extendscriptConfig = (
   isProduction: boolean,
   isPackage: boolean,
 ) => {
-  console.log(outPath);
   const config: RollupOptions = {
     input: extendscriptEntry,
     treeshake: true,
