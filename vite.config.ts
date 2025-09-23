@@ -1,4 +1,3 @@
-import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
@@ -45,7 +44,7 @@ if (action) runAction(config, action);
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), cep(config)],
+  plugins: [react(), cep(config)],
   resolve: {
     alias: [{ find: "@esTypes", replacement: path.resolve(__dirname, "src") }],
   },
