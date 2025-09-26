@@ -4,7 +4,9 @@ import { defineConfig } from "vite";
 import { cep, runAction } from "vite-cep-plugin";
 import cepConfig from "./cep.config";
 import { extendscriptConfig } from "./vite.es.config";
-import "@dotenvx/dotenvx/config";
+import { config as dotenvConfig } from "@dotenvx/dotenvx";
+
+dotenvConfig({ ignore: ["MISSING_ENV_FILE"] });
 
 const extensions = [".js", ".ts", ".tsx"];
 
