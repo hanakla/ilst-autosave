@@ -236,16 +236,6 @@ export const App = () => {
           >
             Next save in: {formatTime(currentSettings.timeRemaining)} (
             {currentDocName})
-            <label
-              style={{ display: "flex", alignItems: "center", gap: "4px" }}
-            >
-              <input
-                type="checkbox"
-                checked={currentSettings.enabled}
-                onChange={toggleAutoSave}
-              />
-              Enable
-            </label>
           </div>
         )}
 
@@ -261,14 +251,28 @@ export const App = () => {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: "8px",
               }}
             >
+              <label
+                style={{ display: "flex", alignItems: "center", gap: "4px" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={currentSettings.enabled}
+                  onChange={toggleAutoSave}
+                />
+                Enable
+              </label>
+
+              <div style={{ borderLeft: "1px solid #888" }}>&zwnj;</div>
+
               {/* Interval setting */}
               <label
                 style={{
                   display: "flex",
                   alignItems: "center",
+                  gap: "4px",
                   fontSize: "12px",
                 }}
               >
@@ -302,18 +306,18 @@ export const App = () => {
                 style={{
                   display: "flex",
                   alignItems: "center",
+                  gap: "4px",
                   fontSize: "12px",
                 }}
               >
-                Confirm-less:
                 <input
                   type="checkbox"
-                  style={{ marginLeft: "8px" }}
                   checked={currentSettings.disableConfirm}
                   onChange={(e) =>
                     updateDocumentSettings({ disableConfirm: e.target.checked })
                   }
                 />
+                Confirm-less
               </label>
 
               {/* Last save time */}
