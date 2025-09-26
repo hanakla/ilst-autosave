@@ -4,6 +4,7 @@ import { defineConfig } from "vite";
 import { cep, runAction } from "vite-cep-plugin";
 import cepConfig from "./cep.config";
 import { extendscriptConfig } from "./vite.es.config";
+import "@dotenvx/dotenvx/config";
 
 const extensions = [".js", ".ts", ".tsx"];
 
