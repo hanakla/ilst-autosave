@@ -239,120 +239,116 @@ export const App = () => {
           </div>
         )}
 
-        {currentSettings.enabled && currentDocName && (
-          <div>
-            <progress
-              max={currentSettings.interval}
-              value={currentSettings.interval - currentSettings.timeRemaining}
-              style={{ width: "100%", height: "20px" }}
-            />
+        <div>
+          <progress
+            max={currentSettings.interval}
+            value={currentSettings.interval - currentSettings.timeRemaining}
+            style={{ width: "100%", height: "20px" }}
+          />
 
-            <div
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <label
+              style={{ display: "flex", alignItems: "center", gap: "4px" }}
+            >
+              <input
+                type="checkbox"
+                checked={currentSettings.enabled}
+                onChange={toggleAutoSave}
+              />
+              Enable
+            </label>
+
+            <div style={{ borderLeft: "1px solid #888" }}>&zwnj;</div>
+
+            {/* Interval setting */}
+            <label
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
+                gap: "4px",
+                fontSize: "12px",
               }}
             >
-              <label
-                style={{ display: "flex", alignItems: "center", gap: "4px" }}
-              >
-                <input
-                  type="checkbox"
-                  checked={currentSettings.enabled}
-                  onChange={toggleAutoSave}
-                />
-                Enable
-              </label>
-
-              <div style={{ borderLeft: "1px solid #888" }}>&zwnj;</div>
-
-              {/* Interval setting */}
-              <label
+              Save Interval:
+              <select
+                value={currentSettings.interval}
+                onChange={(e) => handleIntervalChange(Number(e.target.value))}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
+                  marginLeft: "8px",
+                  padding: "2px 4px",
                   fontSize: "12px",
-                }}
-              >
-                Save Interval:
-                <select
-                  value={currentSettings.interval}
-                  onChange={(e) => handleIntervalChange(Number(e.target.value))}
-                  style={{
-                    marginLeft: "8px",
-                    padding: "2px 4px",
-                    fontSize: "12px",
-                    backgroundColor: bgColor,
-                    color: "#fff",
-                    border: "1px solid #888",
-                    borderRadius: "4px",
-                  }}
-                >
-                  <option value={30}>30s</option>
-                  <option value={60}>1m</option>
-                  <option value={120}>2m</option>
-                  <option value={300}>5m</option>
-                  <option value={600}>10m</option>
-                  <option value={900}>15m</option>
-                  <option value={5}>5s</option>
-                </select>
-              </label>
-
-              <div style={{ borderLeft: "1px solid #888" }}>&zwnj;</div>
-
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  fontSize: "12px",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={currentSettings.disableConfirm}
-                  onChange={(e) =>
-                    updateDocumentSettings({ disableConfirm: e.target.checked })
-                  }
-                />
-                Confirm-less
-              </label>
-
-              {/* Last save time */}
-              {currentSettings.lastSaveTime && (
-                <div
-                  style={{ fontSize: "10px", opacity: 0.8, marginTop: "4px" }}
-                >
-                  Last saved:{" "}
-                  {format(currentSettings.lastSaveTime, "yyyy-MM-dd HH:mm:ss")}
-                </div>
-              )}
-            </div>
-
-            {/* Status display */}
-            {saveStatus && (
-              <div
-                style={{
-                  marginTop: "4px",
-                  padding: "4px",
-                  backgroundColor:
-                    saveStatus.level === "error"
-                      ? "rgba(204, 0, 0, 0.5)"
-                      : saveStatus.level === "success"
-                        ? "rgba(0, 204, 102, 0.5)"
-                        : "rgba(0, 122, 204, 0.5)",
+                  backgroundColor: bgColor,
+                  color: "#fff",
+                  border: "1px solid #888",
                   borderRadius: "4px",
-                  fontSize: "12px",
-                  lineHeight: "16px",
                 }}
               >
-                {saveStatus.message}
+                <option value={30}>30s</option>
+                <option value={60}>1m</option>
+                <option value={120}>2m</option>
+                <option value={300}>5m</option>
+                <option value={600}>10m</option>
+                <option value={900}>15m</option>
+                <option value={5}>5s</option>
+              </select>
+            </label>
+
+            <div style={{ borderLeft: "1px solid #888" }}>&zwnj;</div>
+
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                fontSize: "12px",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={currentSettings.disableConfirm}
+                onChange={(e) =>
+                  updateDocumentSettings({ disableConfirm: e.target.checked })
+                }
+              />
+              Confirm-less
+            </label>
+
+            {/* Last save time */}
+            {currentSettings.lastSaveTime && (
+              <div style={{ fontSize: "10px", opacity: 0.8, marginTop: "4px" }}>
+                Last saved:{" "}
+                {format(currentSettings.lastSaveTime, "yyyy-MM-dd HH:mm:ss")}
               </div>
             )}
           </div>
-        )}
+
+          {/* Status display */}
+          {saveStatus && (
+            <div
+              style={{
+                marginTop: "4px",
+                padding: "4px",
+                backgroundColor:
+                  saveStatus.level === "error"
+                    ? "rgba(204, 0, 0, 0.5)"
+                    : saveStatus.level === "success"
+                      ? "rgba(0, 204, 102, 0.5)"
+                      : "rgba(0, 122, 204, 0.5)",
+                borderRadius: "4px",
+                fontSize: "12px",
+                lineHeight: "16px",
+              }}
+            >
+              {saveStatus.message}
+            </div>
+          )}
+        </div>
 
         {/* Document list */}
         {Object.keys(documentSettings).length > 0 && (
